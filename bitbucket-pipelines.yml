@@ -1,0 +1,10 @@
+pipelines:
+  branches:
+    master:
+      - step:
+        name: Build and test
+        script:
+          - docker build -t kovacevicdenis/fib-client-test -f ./client/Dockerfile.dev ./client
+          - docker run kovacevicdenis/fib-client-test npm run test -- --coverage
+options:
+  docker: true
