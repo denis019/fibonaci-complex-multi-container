@@ -1,0 +1,33 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t kovacevicdenis/fib-client-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run kovacevicdenis/fib-client-test npm run test -- --coverage
+
+after_success:
+  - docker build -t kovacevicdenis/fib-client ./client
+  - docker build -t kovacevicdenis/fib-nginx ./nginx
+  - docker build -t kovacevicdenis/fib-server ./server
+  - docker build -t kovacevicdenis/fib-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push kovacevicdenis/fib-client
+  - docker push kovacevicdenis/fib-nginx
+  - docker push kovacevicdenis/fib-server
+  - docker push kovacevicdenis/fib-worker
+
+deploy:
+  provider: elasticbeanstalk
+  region: "us-east-2"
+  app: "denisdev-docker-react"
+  env: "DenisdevDockerReact-env"
+  bucket_name: "elasticbeanstalk-us-east-2-198205498207"
+  bucket_path: "denisdev-docker-react"
+  on:
+    branch: master
+  access_key_id: $AWS_ACCESS_KEY
+  secret_access_key:
+    secure: "$AWS_SECRET_KEY"
